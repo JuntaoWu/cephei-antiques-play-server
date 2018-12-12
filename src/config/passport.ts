@@ -6,7 +6,9 @@ import { Strategy as LocalStrategy } from 'passport-local';
 import config from './config';
 import WxUserModel, { WxUser } from '../models/wxuser.model';
 
+import * as http from 'http';
 import * as https from 'https';
+import * as jwt from 'jsonwebtoken';
 
 const localWxGameOptions = {
     usernameField: 'code',
@@ -190,6 +192,51 @@ const getNativeUserInfoAsync = async (accessToken: string, openId: string): Prom
     });
 };
 
+const getUserInfoViaPublicServiceAsync = async (unionId: string) => {
+
+    const serviceJwtToken = jwt.sign({
+        service: config.service.name,
+        peerName: config.service.peerName,
+    }, config.service.jwtSecret);
+
+    const hostname = config.service.peerHost;
+    const port = config.service.peerPort;
+    const userInfoPath = `/shared/${unionId}?token=${serviceJwtToken}`;
+    console.log(hostname, userInfoPath);
+
+    return new Promise((resolve, reject) => {
+        let request = http.request({
+            hostname: hostname,
+            port: port,
+            path: userInfoPath,
+            method: "GET",
+        }, (res) => {
+            console.log("response from /shared/.");
+            let userInfoData = "";
+            res.on("data", (chunk) => {
+                userInfoData += chunk;
+            });
+            res.on("end", async () => {
+
+                try {
+                    let result = JSON.parse(userInfoData);
+                    let { code, message, data } = result;
+                    if (code !== 0) {
+                        return reject(message);
+                    }
+                    else {
+                        return resolve(data);
+                    }
+                }
+                catch (ex) {
+                    return reject(ex);
+                }
+            });
+        });
+        request.end();
+    });
+};
+
 // Setting up local NativeLogin (via App) strategy
 const localNativeLogin = new LocalStrategy(localWxGameOptions, async (username, password, done) => {
     console.log("localNativeLogin");
@@ -219,7 +266,7 @@ const localNativeLogin = new LocalStrategy(localWxGameOptions, async (username, 
         return null;
     });
 
-    if(!accessToken) {
+    if (!accessToken) {
         return done(null, false);
     }
 
@@ -250,18 +297,32 @@ const jwtOptions = {
     // TO-DO: Add issuer and audience checks
 };
 
+/**
+ * We need unionId rather than userId to ensure cross-app functions.
+ */
 const jwtWxLogin = new JwtStrategy(jwtOptions, (payload, done) => {
     console.log("jwt payload", payload);
 
-    if (!payload.userId) {
+    if (!payload.unionId) {
         return done(null, false);
     }
 
-    WxUserModel.findOne({ userId: payload.userId }).then(user => {
-        console.log("userId, type" + (typeof user.userId));
-        done(null, user);
+    WxUserModel.findOne({ unionId: payload.unionId }).then(async user => {
+        if (!user) {
+            // todo: request shadow user from other services.
+            const publicUser = await getUserInfoViaPublicServiceAsync(payload.unionId).catch((error) => {
+                console.error(error);
+            });
+            if (!publicUser) {
+                return done(null, false);
+            }
+            user = new WxUserModel(publicUser);  // userId would be ignored.
+            await user.save();
+            return done(null, user);
+        }
+        return done(null, user);
     }).catch(error => {
-        done(null, false);
+        return done(null, false);
     });
 });
 
