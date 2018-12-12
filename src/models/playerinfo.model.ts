@@ -57,6 +57,8 @@ export class PlayerInfo extends Typegoose {
     @prop()
     ending?: Array<string>;
     @prop()
+    gameTime?: Number;
+    @prop()
     pointHunag?: Number;
     @prop()
     pointMu?: Number;

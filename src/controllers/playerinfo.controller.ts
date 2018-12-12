@@ -43,10 +43,19 @@ export let create = async (req, res, next) => {
         playerInfo.isManage = req.body.isManage;
         playerInfo.isShowGuide = req.body.isShowGuide;
         playerInfo.ending = req.body.ending;
+        playerInfo.gameTime = req.body.gameTime;
         playerInfo.pointHunag = req.body.pointHunag;
         playerInfo.pointMu = req.body.pointMu;
+        playerInfo.__v = req.body.__v;
     }
-    await playerInfo.save();
+    await playerInfo.save().catch(error => {
+        console.error("playerInfo.save() error.", error);
+        return res.json({
+            code: 500,
+            message: "save playerInfo error",
+            data: playerInfo
+        });
+    });
 
     return res.json({
         code: 0,
