@@ -7,9 +7,10 @@
 import config from '../config/config';
 
 import app from '../app';
-import * as http from 'http';
-//import https from 'https';
+import http from 'http';
+import https from 'https';
 import mongoose from 'mongoose';
+import fs from 'fs';
 
 // // make bluebird default Promise
 // Promise = require('bluebird'); // eslint-disable-line no-global-assign
@@ -21,7 +22,7 @@ import mongoose from 'mongoose';
  * Get port from environment and store in Express.
  */
 
-const port = normalizePort(config.port || '4040');
+const port = normalizePort(config.port);
 
 // connect to mongo db
 const mongoUri = config.mongo.host;
@@ -52,14 +53,14 @@ server.on('error', onError);
 server.on('listening', onListening);
 
 
-// var options = {
-//   key: fs.readFileSync('/etc/letsencrypt/live/gdjzj.hzsdgames.com/privkey.pem'),
-//   cert: fs.readFileSync('/etc/letsencrypt/live/gdjzj.hzsdgames.com/fullchain.pem')
-// };
-// var sslServer = https.createServer(options, app);
-// sslServer.listen(`8095`);
-// sslServer.on('error', onError);
-// sslServer.on('listening', onListening);
+var options = {
+  key: fs.readFileSync('/etc/letsencrypt/live/gdjzj.hzsdgames.com/privkey.pem'),
+  cert: fs.readFileSync('/etc/letsencrypt/live/gdjzj.hzsdgames.com/fullchain.pem')
+};
+var sslServer = https.createServer(options, app);
+sslServer.listen(config.sslPort);
+sslServer.on('error', onError);
+sslServer.on('listening', onListening);
 
 /**
  * Normalize a port into a number, string, or false.
