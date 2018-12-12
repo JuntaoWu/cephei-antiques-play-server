@@ -22,8 +22,6 @@ import fs from 'fs';
  * Get port from environment and store in Express.
  */
 
-const port = normalizePort(config.port);
-
 // connect to mongo db
 const mongoUri = config.mongo.host;
 mongoose.connect(mongoUri, { server: { socketOptions: { keepAlive: 1 } } });
@@ -48,9 +46,13 @@ const server = http.createServer(app);
 /**
  * Listen on provided port, on all network interfaces.
  */
+const port = normalizePort(config.port);
+
 server.listen(port);
 server.on('error', onError);
-server.on('listening', onListening);
+server.on('listening', () => {
+  onListening(server);
+});
 
 
 var options = {
@@ -60,7 +62,9 @@ var options = {
 var sslServer = https.createServer(options, app);
 sslServer.listen(config.sslPort);
 sslServer.on('error', onError);
-sslServer.on('listening', onListening);
+sslServer.on('listening', () => {
+  onListening(sslServer);
+});
 
 /**
  * Normalize a port into a number, string, or false.
@@ -114,7 +118,7 @@ function onError(error: any) {
  * Event listener for HTTP server "listening" event.
  */
 
-function onListening() {
+function onListening(server) {
   const addr = server.address();
   const bind = typeof addr === 'string'
     ? 'pipe ' + addr

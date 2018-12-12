@@ -7,6 +7,7 @@ import cors from 'cors';
 
 import indexRouter from './routes';
 import versionRouter from './routes/version';
+import passport from './config/passport';
 
 var app = express();
 
@@ -30,6 +31,9 @@ app.use(express.static(path.join(__dirname, '../public'), {
 app.use(express.static(path.join(__dirname, '../public/sw.js'), {
   etag: false
 }), cors());
+
+app.use((passport as any).default.initialize());
+app.use((passport as any).default.session());
 
 app.use('/', indexRouter);
 app.use('/version', versionRouter);
