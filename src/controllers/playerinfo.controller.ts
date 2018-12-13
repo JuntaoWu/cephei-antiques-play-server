@@ -46,7 +46,6 @@ export let create = async (req, res, next) => {
         playerInfo.gameTime = req.body.gameTime;
         playerInfo.pointHunag = req.body.pointHunag;
         playerInfo.pointMu = req.body.pointMu;
-        playerInfo.__v = req.body.__v;
     }
     await playerInfo.save().catch(error => {
         console.error("playerInfo.save() error.", error);

@@ -1,7 +1,8 @@
 import { Request, Response, NextFunction } from "express";
 import express from 'express';
 
-import * as https from "https";
+import * as http from "http";
+import config from "../config/config";
 
 var validate = require('express-validation');
 var paramValidation = require('../config/param-validation');
@@ -11,11 +12,15 @@ const router = express.Router();
 router.route('/check')
     /** GET /version/check - Get latest version */
     .get((req: Request, res: Response, next: NextFunction) => {
+
+        const hostname = config.service.dashboardHost;
+        const port = config.service.dashboardPort;
+
         // todo: check version.
-        var request = https.request({
-            hostname: "dashboard.hzsdgames.com",
-            port: 8088,
-            path: `/version/check?appName=cephei-antiques-play&version=${req.query.version || 0}`,
+        var request = http.request({
+            hostname: hostname,
+            port: port,
+            path: `/version/check?appName=${config.service.name}&version=${req.query.version || 0}`,
             method: "GET",
         }, (cepheiRes) => {
             console.log("response from dashboard api.");
