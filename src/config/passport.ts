@@ -304,7 +304,16 @@ const jwtWxLogin = new JwtStrategy(jwtOptions, (payload, done) => {
     console.log("jwt payload", payload);
 
     if (!payload.unionId) {
-        return done(null, false);
+        if (!payload.userId) {
+            return done(null, false);
+        }
+        else {
+            // this is for ap-anonymous-token-login.
+            WxUserModel.findOne({ userId: payload.userId }).then(async user => {
+                return done(null, user);
+            });
+            return;
+        }
     }
 
     WxUserModel.findOne({ unionId: payload.unionId }).then(async user => {
