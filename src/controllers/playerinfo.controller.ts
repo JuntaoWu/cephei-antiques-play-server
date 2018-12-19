@@ -27,6 +27,7 @@ export let create = async (req, res, next) => {
     if (!playerInfo) {
         playerInfo = new PlayerInfoModel(req.body);
         playerInfo.unionId = req.user.unionId;
+        playerInfo.userId = req.user.userId;
     }
     else {
         playerInfo.plotId = req.body.plotId;
