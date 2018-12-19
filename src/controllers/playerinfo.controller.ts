@@ -11,7 +11,8 @@ import { APIError } from '../helpers/APIError';
 import PlayerInfoModel, { PlayerInfo } from '../models/playerinfo.model';
 
 export let load = async (req, res, next: any) => {
-    let playerInfo = await PlayerInfoModel.findOne({ unionId: req.user.unionId });
+
+    let playerInfo = await PlayerInfoModel.findOne({ userId: req.user.userId });
 
     return res.json({
         code: 0,
@@ -21,7 +22,7 @@ export let load = async (req, res, next: any) => {
 };
 
 export let create = async (req, res, next) => {
-    let playerInfo = await PlayerInfoModel.findOne({ unionId: req.user.unionId });
+    let playerInfo = await PlayerInfoModel.findOne({ userId: req.user.userId });
 
     if (!playerInfo) {
         playerInfo = new PlayerInfoModel(req.body);

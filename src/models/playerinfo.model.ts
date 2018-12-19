@@ -25,6 +25,8 @@ import mongoose, { Schema } from "mongoose";
 
 export class PlayerInfo extends Typegoose {
     @prop({ index: true })
+    userId?: Number;
+    @prop({ index: true })
     unionId?: String;
     @prop()
     plotId: Number;
